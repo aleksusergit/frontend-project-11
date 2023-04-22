@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "RSS-reader is a service for aggregating RSS-feeds, which makes it easy to read a variety of sources",
-  "main": "./src/index.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
