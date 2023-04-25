@@ -5,7 +5,8 @@
   "description": "RSS-reader is a service for aggregating RSS-feeds, which makes it easy to read a variety of sources",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode=production --node-env=production"
   },
   "repository": {
     "type": "git",
