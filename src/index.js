@@ -1,4 +1,3 @@
-import './styles.scss';
-import 'bootstrap';
+import app from './rssForm.js';
 
-console.log('Hello, World!');
+app();
