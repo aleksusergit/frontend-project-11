@@ -12,5 +12,8 @@ export default {
       parserError: 'Ресурс не содержит валидный RSS',
       defaultError: 'Упс! Что-то пошло не так ...',
     },
+    feeds: 'Фиды',
+    posts: 'Посты',
+    view: 'Просмотр',
   },
 };

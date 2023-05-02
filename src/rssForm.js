@@ -2,24 +2,41 @@
 
 import './styles.scss';
 import 'bootstrap';
+import axios from 'axios';
 import i18n from 'i18next';
 import onChange from 'on-change';
 import { string, setLocale } from 'yup';
-// import _ from 'lodash';
-// import keyBy from 'lodash/keyBy.js';
-// import isEmpty from 'lodash/isEmpty.js';
+import last from 'lodash/last.js';
+import uniqueId from 'lodash/uniqueId.js';
 
+import parser from './parser.js';
 import render from './view.js';
 import ru from './locales/ru.js';
 
-const validate = (link, links) => {
+const validate = (link, state) => {
   const schema = string()
     .trim()
     .url('invalidUrl') // 'Ссылка должна быть валидным URL'
     .required('mustNotBeEmpty') // 'Поле не должно быть пустым'
-    .notOneOf(links, 'alreadyAddedUrl'); // 'RSS уже существует'
+    .notOneOf(state.content.urls, 'alreadyAddedUrl'); // 'RSS уже существует'
 
   return schema.validate(link);
+};
+
+const getAxiosRequest = (state) => {
+  const url = last(state.content.urls);
+  const allOriginsUrl = 'https://allorigins.hexlet.app/get';
+  const preparedUrl = new URL(allOriginsUrl);
+  preparedUrl.searchParams.set('disableCache', 'true');
+  preparedUrl.searchParams.set('url', url);
+
+  return axios
+    .get(preparedUrl)
+    .then((respons) => respons.data.contents)
+    .catch((e) => {
+      state.process.error = e.message;
+      state.process.state = 'error';
+    });
 };
 
 export default () => {
@@ -29,7 +46,7 @@ export default () => {
   i18nInstance
     .init({
       lng: 'ru',
-      debug: true,
+      debug: false,
       resources: {
         ru,
       },
@@ -41,7 +58,7 @@ export default () => {
           error: null,
         },
         content: {
-          url: '',
+          urls: [],
           feeds: [],
           posts: [],
         },
@@ -72,11 +89,23 @@ export default () => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const url = formData.get('url');
-        watchedState.content.url = url;
-        validate(url, watchedState.content.feeds)
+
+        validate(url, watchedState)
           .then((link) => {
-            watchedState.content.feeds.push(link); // 'RSS успешно загружен'
+            watchedState.content.urls.push(link); // 'RSS успешно загружен'
             watchedState.process.state = 'sending';
+            return getAxiosRequest(watchedState);
+          })
+          .then((response) => {
+            if (!watchedState.process.error) {
+              const { feeds, posts } = parser(response);
+              posts.forEach((post) => {
+                post.postId = uniqueId();
+              });
+              watchedState.content.feeds.unshift(feeds);
+              watchedState.content.posts.unshift(posts);
+              watchedState.process.state = 'finish';
+            }
           })
           .catch((err) => {
             watchedState.process.error = err.message;
