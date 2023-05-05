@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable import/no-extraneous-dependencies */
 
 import './styles.scss';
@@ -45,23 +46,17 @@ const addPosts = (feedId, posts, state) => {
 };
 
 const updatePosts = (state) => {
-  const promises = state.content.feeds.map(({ link, id }) =>
-    getAxiosRequest(link, state).then((response) => {
-      const { posts } = parser(response);
+  const promises = state.content.feeds.map(({ link, id }) => getAxiosRequest(link, state).then((response) => {
+    const { posts } = parser(response);
+    const alreadyAddedPosts = state.content.posts.map((post) => post.link);
+    const newPosts = posts.filter((post) => !alreadyAddedPosts.includes(post.link));
+    if (newPosts.length > 0) {
+      addPosts(id, newPosts, state);
+    }
+    state.process.state = 'update';
 
-      const alreadyAddedPosts = state.content.posts.map((post) => post.link);
-
-      const newPosts = posts.filter((post) => !alreadyAddedPosts.includes(post.link));
-
-      if (newPosts.length > 0) {
-        addPosts(id, newPosts, state);
-      }
-
-      state.process.state = 'update';
-
-      return Promise.resolve();
-    }),
-  );
+    return Promise.resolve();
+  }));
 
   Promise.allSettled(promises).finally(() => {
     setTimeout(() => updatePosts(state), updateTime);
