@@ -83,7 +83,10 @@ export default () => {
           feeds: [],
           posts: [],
         },
-        uiState: {},
+        uiState: {
+          modalPostId: null,
+          visitedPostId: new Set(),
+        },
       };
 
       const elements = {
@@ -93,7 +96,13 @@ export default () => {
         button: document.querySelector('button[type="submit"]'),
         posts: document.querySelector('.posts'),
         feeds: document.querySelector('.feeds'),
-        modal: {},
+        buttonView: document.querySelector('.btn-sm'),
+        modal: {
+          modalElements: document.querySelector('.modal'),
+          title: document.querySelector('.modal-title'),
+          body: document.querySelector('.modal-body'),
+          buttonReadCompletely: document.querySelector('a[role="button"]'),
+        },
       };
 
       setLocale({
@@ -134,6 +143,13 @@ export default () => {
             watchedState.process.error = errorMessage;
             watchedState.process.state = 'error';
           });
+      });
+
+      elements.modal.modalElements.addEventListener('shown.bs.modal', (e) => {
+        watchedState.uiState.modalPostId = e.relatedTarget.dataset.id;
+        watchedState.uiState.visitedPostId.add(watchedState.uiState.modalPostId);
+        console.log('visited =', watchedState.uiState.visitedPostId);
+        watchedState.process.state = 'update';
       });
     });
 };

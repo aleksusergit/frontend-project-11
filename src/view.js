@@ -28,11 +28,21 @@ const renderPosts = (state, element, source) => {
 
   state.content.posts.forEach((post) => {
     const li = document.createElement('li');
-    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+    li.classList.add(
+      'list-group-item',
+      'd-flex',
+      'justify-content-between',
+      'align-items-start',
+      'border-0',
+      'border-end-0',
+    );
 
     const a = document.createElement('a');
     a.setAttribute('href', post.link);
-    a.classList.add('fw-bold');
+    const isVisitedPost = state.uiState.visitedPostId.has(String(post.id));
+    const [boldClass] = ['fw-bold', 'link-secondary'];
+    const currentClass = isVisitedPost ? 'fw-normal' : boldClass;
+    a.classList.add(currentClass);
     a.setAttribute('data-id', post.id);
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
@@ -108,6 +118,14 @@ const handlerProcessError = (state, elements, source) => {
   }
 };
 
+const handlerModal = (state, elements) => {
+  const [currentPost] = state.content.posts.filter((post) => post.id === state.uiState.modalPostId);
+  console.log('currentPost =', currentPost);
+  elements.modal.title.textContent = currentPost.title;
+  elements.modal.body.textContent = currentPost.description;
+  elements.modal.buttonReadCompletely.setAttribute('href', currentPost.link);
+};
+
 export default (state, elements, source) => (path, value) => {
   switch (path) {
     case 'process.state': {
@@ -132,8 +150,12 @@ export default (state, elements, source) => (path, value) => {
       }
       if (value === 'error') {
         handlerProcessError(state, elements, source);
-        console.log(state.process.error);
       }
+      break;
+    }
+
+    case 'uiState.modalPostId': {
+      handlerModal(state, elements);
       break;
     }
 
