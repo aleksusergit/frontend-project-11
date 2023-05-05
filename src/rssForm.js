@@ -6,25 +6,25 @@ import axios from 'axios';
 import i18n from 'i18next';
 import onChange from 'on-change';
 import { string, setLocale } from 'yup';
-import last from 'lodash/last.js';
 import uniqueId from 'lodash/uniqueId.js';
 
 import parser from './parser.js';
 import render from './view.js';
 import ru from './locales/ru.js';
 
-const validate = (link, state) => {
+const updateTime = 5000;
+
+const validate = (link, links) => {
   const schema = string()
     .trim()
     .url('invalidUrl') // 'Ссылка должна быть валидным URL'
     .required('mustNotBeEmpty') // 'Поле не должно быть пустым'
-    .notOneOf(state.content.urls, 'alreadyAddedUrl'); // 'RSS уже существует'
+    .notOneOf(links, 'alreadyAddedUrl'); // 'RSS уже существует'
 
   return schema.validate(link);
 };
 
-const getAxiosRequest = (state) => {
-  const url = last(state.content.urls);
+const getAxiosRequest = (url, state) => {
   const allOriginsUrl = 'https://allorigins.hexlet.app/get';
   const preparedUrl = new URL(allOriginsUrl);
   preparedUrl.searchParams.set('disableCache', 'true');
@@ -39,9 +39,36 @@ const getAxiosRequest = (state) => {
     });
 };
 
-export default () => {
-  console.log('Start!');
+const addPosts = (feedId, posts, state) => {
+  const preparedPosts = posts.map((post) => ({ ...post, feedId, id: uniqueId() }));
+  state.content.posts = [...preparedPosts, ...state.content.posts];
+};
 
+const updatePosts = (state) => {
+  const promises = state.content.feeds.map(({ link, id }) =>
+    getAxiosRequest(link, state).then((response) => {
+      const { posts } = parser(response);
+
+      const alreadyAddedPosts = state.content.posts.map((post) => post.link);
+
+      const newPosts = posts.filter((post) => !alreadyAddedPosts.includes(post.link));
+
+      if (newPosts.length > 0) {
+        addPosts(id, newPosts, state);
+      }
+
+      state.process.state = 'update';
+
+      return Promise.resolve();
+    }),
+  );
+
+  Promise.allSettled(promises).finally(() => {
+    setTimeout(() => updatePosts(state), updateTime);
+  });
+};
+
+export default () => {
   const i18nInstance = i18n.createInstance();
   i18nInstance
     .init({
@@ -58,7 +85,6 @@ export default () => {
           error: null,
         },
         content: {
-          urls: [],
           feeds: [],
           posts: [],
         },
@@ -85,30 +111,32 @@ export default () => {
 
       const watchedState = onChange(initialState, render(initialState, elements, sourceText));
 
+      updatePosts(watchedState);
+
       elements.form.addEventListener('submit', (e) => {
+        watchedState.process.error = null;
         e.preventDefault();
         const formData = new FormData(e.target);
         const url = formData.get('url');
+        const addedLinks = watchedState.content.feeds.map(({ link }) => link);
 
-        validate(url, watchedState)
+        validate(url, addedLinks)
           .then((link) => {
-            watchedState.content.urls.push(link); // 'RSS успешно загружен'
             watchedState.process.state = 'sending';
-            return getAxiosRequest(watchedState);
+            return getAxiosRequest(link, watchedState);
           })
           .then((response) => {
             if (!watchedState.process.error) {
-              const { feeds, posts } = parser(response);
-              posts.forEach((post) => {
-                post.postId = uniqueId();
-              });
-              watchedState.content.feeds.unshift(feeds);
-              watchedState.content.posts.unshift(posts);
+              const { feed, posts } = parser(response);
+              const feedId = uniqueId();
+              watchedState.content.feeds.unshift({ ...feed, feedId, link: url });
+              addPosts(feedId, posts, watchedState);
               watchedState.process.state = 'finish';
             }
           })
           .catch((err) => {
-            watchedState.process.error = err.message;
+            const errorMessage = err.message ?? 'defaultError';
+            watchedState.process.error = errorMessage;
             watchedState.process.state = 'error';
           });
       });

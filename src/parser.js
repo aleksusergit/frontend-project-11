@@ -10,15 +10,15 @@ export default (content) => {
   const channel = parsered.querySelector('channel');
   const title = channel.querySelector('title').textContent;
   const description = channel.querySelector('description').textContent;
-  const feeds = { title, description };
+  const feed = { title, description };
 
   const items = channel.querySelectorAll('item');
   const posts = Array.from(items).map((post) => {
     const postTitle = post.querySelector('title').textContent;
     const postDescription = post.querySelector('description').textContent;
     const postLink = post.querySelector('link').textContent;
-    return { postTitle, postDescription, postLink };
+    return { title: postTitle, description: postDescription, link: postLink };
   });
 
-  return { feeds, posts };
+  return { feed, posts };
 };

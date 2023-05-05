@@ -1,19 +1,6 @@
-const renderFeeds = (state, elements, source) => {
-  const div = document.createElement('div');
-  div.classList.add('card', 'border-0');
-
-  const divCardBody = document.createElement('div');
-  divCardBody.classList.add('card-body');
-  div.append(divCardBody);
-
-  const h2 = document.createElement('h2');
-  h2.classList.add('card-title', 'h4');
-  h2.textContent = source('feeds');
-  divCardBody.append(h2);
-
+const renderFeeds = (state, element) => {
   const ul = document.createElement('ul');
   ul.classList.add('list-group', 'border-0', 'rounded-0');
-  div.append(ul);
 
   state.content.feeds.forEach((feed) => {
     const li = document.createElement('li');
@@ -22,73 +9,85 @@ const renderFeeds = (state, elements, source) => {
     const h3 = document.createElement('h3');
     h3.classList.add('h6', 'm-0');
     h3.textContent = feed.title;
-    li.append(h3);
 
     const p = document.createElement('p');
     p.classList.add('m-0', 'small', 'text-black-50');
     p.textContent = feed.description;
-    li.append(p);
 
+    li.append(h3);
+    li.append(p);
     ul.append(li);
   });
 
-  elements.feeds.replaceChildren(div);
+  element.replaceChildren(ul);
 };
 
-const renderPosts = (state, elements, source) => {
+const renderPosts = (state, element, source) => {
+  const ul = document.createElement('ul');
+  ul.classList.add('list-group', 'border-0', 'rounded-0');
+
+  state.content.posts.forEach((post) => {
+    const li = document.createElement('li');
+    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+
+    const a = document.createElement('a');
+    a.setAttribute('href', post.link);
+    a.classList.add('fw-bold');
+    a.setAttribute('data-id', post.id);
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
+    a.textContent = post.title;
+
+    const button = document.createElement('button');
+    button.setAttribute('type', 'button');
+    button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    button.setAttribute('data-id', post.id);
+    button.setAttribute('data-bs-toggle', 'modal');
+    button.setAttribute('data-bs-target', '#modal');
+    button.textContent = source('view');
+
+    li.append(a);
+    li.append(button);
+    ul.append(li);
+  });
+
+  element.replaceChildren(ul);
+};
+
+const makeContainer = (title, state, elements, source) => {
+  const container = {
+    posts: (element) => renderPosts(state, element, source),
+    feeds: (element) => renderFeeds(state, element),
+  };
+
+  elements[title].innerHTML = '';
+
   const div = document.createElement('div');
   div.classList.add('card', 'border-0');
 
   const divCardBody = document.createElement('div');
   divCardBody.classList.add('card-body');
-  div.append(divCardBody);
 
   const h2 = document.createElement('h2');
   h2.classList.add('card-title', 'h4');
-  h2.textContent = source('posts');
+  h2.textContent = source(title);
+
+  div.append(divCardBody);
   divCardBody.append(h2);
-
-  const ul = document.createElement('ul');
-  ul.classList.add('list-group', 'border-0', 'rounded-0');
-  div.append(ul);
-
-  state.content.posts.forEach((item) => {
-    item.map((post) => {
-      const li = document.createElement('li');
-      li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-
-      const a = document.createElement('a');
-      a.setAttribute('href', post.postLink);
-      a.classList.add('fw-bold');
-      a.setAttribute('data-id', post.postId);
-      a.setAttribute('target', '_blank');
-      a.setAttribute('rel', 'noopener noreferrer');
-      a.textContent = post.postTitle;
-      li.append(a);
-
-      const button = document.createElement('button');
-      button.setAttribute('type', 'button');
-      button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-      button.setAttribute('data-id', post.postId);
-      button.setAttribute('data-bs-toggle', 'modal');
-      button.setAttribute('data-bs-target', '#modal');
-      button.textContent = source('view');
-      li.append(button);
-
-      ul.append(li);
-      return post;
-    });
-  });
-
-  elements.posts.replaceChildren(div);
+  elements[title].replaceChildren(div);
+  container[title](div);
 };
 
-const handleProcessState = (state, elements, source) => {
+const handlerProcessState = (state, elements, source) => {
+  elements.feedback.textContent = '';
+
+  makeContainer('posts', state, elements, source);
+  makeContainer('feeds', state, elements, source);
+
+  elements.input.focus();
+  elements.form.reset();
   elements.button.disabled = false;
   elements.input.disabled = false;
-
-  renderFeeds(state, elements, source);
-  renderPosts(state, elements, source);
 
   elements.input.classList.remove('is-invalid');
   elements.feedback.classList.remove('text-danger');
@@ -96,19 +95,17 @@ const handleProcessState = (state, elements, source) => {
   elements.feedback.textContent = source('success');
 };
 
-const handleProcessError = (state, elements, source) => {
+const handlerProcessError = (state, elements, source) => {
   elements.input.classList.add('is-invalid');
   elements.feedback.classList.add('text-danger');
-  // console.log('process.error =', state.process.error);
+  elements.button.disabled = false;
+  elements.input.disabled = false;
 
   if (state.process.error === 'Network Error') {
     elements.feedback.textContent = source('errors.netError');
   } else {
     elements.feedback.textContent = source(`errors.${state.process.error}`);
   }
-
-  elements.button.disabled = false;
-  elements.input.disabled = false;
 };
 
 export default (state, elements, source) => (path, value) => {
@@ -127,17 +124,20 @@ export default (state, elements, source) => (path, value) => {
         elements.input.disabled = true;
       }
       if (value === 'finish') {
-        handleProcessState(state, elements, source);
+        handlerProcessState(state, elements, source);
+      }
+      if (value === 'update') {
+        elements.input.focus();
+        makeContainer('posts', state, elements, source);
       }
       if (value === 'error') {
-        handleProcessError(state, elements, source);
+        handlerProcessError(state, elements, source);
         console.log(state.process.error);
       }
       break;
     }
 
     default:
-      elements.feedback.textContent = source('errors.defaultError');
       break;
   }
   state.process.state = 'filling';
