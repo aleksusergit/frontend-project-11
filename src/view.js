@@ -38,22 +38,22 @@ const renderPosts = (state, element, source) => {
     );
 
     const a = document.createElement('a');
-    a.setAttribute('href', post.link);
+    a.href = post.link;
     const isVisitedPost = state.uiState.visitedPostId.has(String(post.id));
     const [boldClass] = ['fw-bold', 'link-secondary'];
     const currentClass = isVisitedPost ? 'fw-normal' : boldClass;
     a.classList.add(currentClass);
-    a.setAttribute('data-id', post.id);
-    a.setAttribute('target', '_blank');
-    a.setAttribute('rel', 'noopener noreferrer');
+    a.dataset.id = post.id;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
     a.textContent = post.title;
 
     const button = document.createElement('button');
-    button.setAttribute('type', 'button');
+    button.type = 'button';
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-    button.setAttribute('data-id', post.id);
-    button.setAttribute('data-bs-toggle', 'modal');
-    button.setAttribute('data-bs-target', '#modal');
+    button.dataset.id = post.id;
+    button.dataset.bsToggle = 'modal';
+    button.dataset.bsTarget = '#modal';
     button.textContent = source('view');
 
     li.append(a);
@@ -118,12 +118,13 @@ const handlerProcessError = (state, elements, source) => {
   }
 };
 
-const handlerModal = (state, elements) => {
-  const [currentPost] = state.content.posts.filter((post) => post.id === state.uiState.modalPostId);
-  console.log('currentPost =', currentPost);
-  elements.modal.title.textContent = currentPost.title;
-  elements.modal.body.textContent = currentPost.description;
-  elements.modal.buttonReadCompletely.setAttribute('href', currentPost.link);
+const handlerModalWindow = (state, elements) => {
+  const [{ title, description, link }] = state.content.posts.filter(
+    ({ id }) => id === state.uiState.modalPostId,
+  );
+  elements.modal.title.textContent = title;
+  elements.modal.body.textContent = description;
+  elements.modal.buttonReadCompletely.href = link;
 };
 
 export default (state, elements, source) => (path, value) => {
@@ -155,7 +156,7 @@ export default (state, elements, source) => (path, value) => {
     }
 
     case 'uiState.modalPostId': {
-      handlerModal(state, elements);
+      handlerModalWindow(state, elements);
       break;
     }
 
