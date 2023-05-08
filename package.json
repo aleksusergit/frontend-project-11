@@ -19,10 +19,7 @@
   },
   "homepage": "https://github.com/aleksusergit/frontend-project-11#readme",
   "devDependencies": {
-    "@babel/core": "^7.20.5",
-    "@babel/preset-env": "^7.20.2",
     "@webpack-cli/generators": "^3.0.1",
-    "babel-loader": "^9.1.0",
     "css-loader": "^6.7.3",
     "eslint": "^8.38.0",
     "eslint-config-airbnb-base": "^15.0.0",

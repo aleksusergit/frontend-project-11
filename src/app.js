@@ -46,17 +46,19 @@ const addPosts = (feedId, posts, state) => {
 };
 
 const updatePosts = (state) => {
-  const promises = state.content.feeds.map(({ link, id }) => getAxiosRequest(link, state).then((response) => {
-    const { posts } = parser(response);
-    const alreadyAddedPosts = state.content.posts.map((post) => post.link);
-    const newPosts = posts.filter((post) => !alreadyAddedPosts.includes(post.link));
-    if (newPosts.length > 0) {
-      addPosts(id, newPosts, state);
-    }
-    state.process.state = 'update';
+  const promises = state.content.feeds.map(({ link, id }) =>
+    getAxiosRequest(link, state).then((response) => {
+      const { posts } = parser(response);
+      const alreadyAddedPosts = state.content.posts.map((post) => post.link);
+      const newPosts = posts.filter((post) => !alreadyAddedPosts.includes(post.link));
+      if (newPosts.length > 0) {
+        addPosts(id, newPosts, state);
+      }
+      state.process.state = 'update';
 
-    return Promise.resolve();
-  }));
+      return Promise.resolve();
+    }),
+  );
 
   Promise.allSettled(promises).finally(() => {
     setTimeout(() => updatePosts(state), updateTime);
@@ -145,7 +147,7 @@ export default () => {
           });
       });
 
-      elements.modal.modalElements.addEventListener('shown.bs.modal', (e) => {
+      elements.modal.modalElements.addEventListener('show.bs.modal', (e) => {
         const postButtonId = e.relatedTarget.dataset.id;
         watchedState.uiState.modalPostId = postButtonId;
         watchedState.uiState.visitedPostId.add(postButtonId);

@@ -1,3 +1,3 @@
-import app from './rssForm.js';
+import app from './app.js';
 
 app();
