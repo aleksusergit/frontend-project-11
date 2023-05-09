@@ -139,6 +139,10 @@ export default (state, elements, source) => (path, value) => {
         elements.input.disabled = false;
       }
       if (value === 'sending') {
+        elements.feedback.classList.add('text-danger');
+        elements.feedback.classList.remove('text-success');
+        elements.input.classList.remove('is-invalid');
+        elements.feedback.textContent = '';
         elements.button.disabled = true;
         elements.input.disabled = true;
       }
@@ -147,7 +151,13 @@ export default (state, elements, source) => (path, value) => {
       }
       if (value === 'update') {
         elements.input.focus();
-        makeContainer('posts', state, elements, source);
+
+        if (state.process.error === 'Network Error') {
+          state.process.error = null;
+          handlerProcessState(state, elements, source);
+        } else {
+          makeContainer('posts', state, elements, source);
+        }
       }
       if (value === 'error') {
         handlerProcessError(state, elements, source);
@@ -163,5 +173,6 @@ export default (state, elements, source) => (path, value) => {
     default:
       break;
   }
+
   state.process.state = 'filling';
 };

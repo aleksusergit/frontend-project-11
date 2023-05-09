@@ -145,17 +145,12 @@ export default () => {
           });
       });
 
-      elements.modal.modalElements.addEventListener('show.bs.modal', (e) => {
-        const postButtonId = e.relatedTarget.dataset.id;
-        watchedState.uiState.modalPostId = postButtonId;
-        watchedState.uiState.visitedPostId.add(postButtonId);
-        watchedState.process.state = 'update';
-      });
-
       elements.posts.addEventListener('click', (e) => {
         const postId = e.target.dataset.id;
-        if (postId) {
-          watchedState.uiState.visitedPostId.add(postId);
+        watchedState.uiState.modalPostId = postId;
+        watchedState.uiState.visitedPostId.add(postId);
+
+        if (!watchedState.process.error) {
           watchedState.process.state = 'update';
         }
       });
