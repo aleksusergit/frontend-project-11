@@ -120,7 +120,7 @@ const handlerProcessError = (state, elements, source) => {
 
 const handlerModalWindow = (state, elements) => {
   const [{ title, description, link }] = state.content.posts.filter(
-    ({ id }) => id === state.uiState.modalPostId,
+    ({ id }) => id === state.uiState.PostId,
   );
   elements.modal.title.textContent = title;
   elements.modal.body.textContent = description;
@@ -149,24 +149,27 @@ export default (state, elements, source) => (path, value) => {
       if (value === 'finish') {
         handlerProcessState(state, elements, source);
       }
-      if (value === 'update') {
-        elements.input.focus();
-
-        if (state.process.error === 'Network Error') {
-          state.process.error = null;
-          handlerProcessState(state, elements, source);
-        } else {
-          makeContainer('posts', state, elements, source);
-        }
-      }
       if (value === 'error') {
         handlerProcessError(state, elements, source);
       }
       break;
     }
 
-    case 'uiState.modalPostId': {
+    case 'uiState.PostId': {
       handlerModalWindow(state, elements);
+      break;
+    }
+
+    case 'content.posts':
+    case 'uiState.visitedPostId': {
+      // elements.input.focus();
+
+      if (state.process.error === 'Network Error') {
+        state.process.error = null;
+        handlerProcessState(state, elements, source);
+      } else {
+        makeContainer('posts', state, elements, source);
+      }
       break;
     }
 

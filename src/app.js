@@ -53,7 +53,6 @@ const updatePosts = (state) => {
     if (newPosts.length > 0) {
       addPosts(id, newPosts, state);
     }
-    state.process.state = 'update';
 
     return Promise.resolve();
   }));
@@ -84,7 +83,7 @@ export default () => {
           posts: [],
         },
         uiState: {
-          modalPostId: null,
+          PostId: null,
           visitedPostId: new Set(),
         },
       };
@@ -147,11 +146,10 @@ export default () => {
 
       elements.posts.addEventListener('click', (e) => {
         const postId = e.target.dataset.id;
-        watchedState.uiState.modalPostId = postId;
-        watchedState.uiState.visitedPostId.add(postId);
+        watchedState.uiState.PostId = postId;
 
         if (!watchedState.process.error) {
-          watchedState.process.state = 'update';
+          watchedState.uiState.visitedPostId.add(postId);
         }
       });
     });
