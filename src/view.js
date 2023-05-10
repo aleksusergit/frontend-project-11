@@ -128,21 +128,22 @@ const handlerModalWindow = (state, elements) => {
 };
 
 export default (state, elements, source) => (path, value) => {
+  const prepareInputField = () => {
+    elements.feedback.classList.add('text-danger');
+    elements.feedback.classList.remove('text-success');
+    elements.input.classList.remove('is-invalid');
+    elements.feedback.textContent = '';
+  };
+
   switch (path) {
     case 'process.state': {
       if (value === 'filling') {
-        elements.feedback.classList.add('text-danger');
-        elements.feedback.classList.remove('text-success');
-        elements.input.classList.remove('is-invalid');
-        elements.feedback.textContent = '';
+        prepareInputField();
         elements.button.disabled = false;
         elements.input.disabled = false;
       }
       if (value === 'sending') {
-        elements.feedback.classList.add('text-danger');
-        elements.feedback.classList.remove('text-success');
-        elements.input.classList.remove('is-invalid');
-        elements.feedback.textContent = '';
+        prepareInputField();
         elements.button.disabled = true;
         elements.input.disabled = true;
       }
@@ -162,8 +163,6 @@ export default (state, elements, source) => (path, value) => {
 
     case 'content.posts':
     case 'uiState.visitedPostId': {
-      // elements.input.focus();
-
       if (state.process.error === 'Network Error') {
         state.process.error = null;
         handlerProcessState(state, elements, source);

@@ -148,7 +148,7 @@ export default () => {
         const postId = e.target.dataset.id;
         watchedState.uiState.PostId = postId;
 
-        if (!watchedState.process.error) {
+        if (watchedState.process.error !== 'Network Error') {
           watchedState.uiState.visitedPostId.add(postId);
         }
       });
